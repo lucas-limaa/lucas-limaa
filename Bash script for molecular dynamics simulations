@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# This is script will help you in automatize your molecular dynamics simulations.
+
+# Preparation input
+echo | gmx insert-molecules -ci cloreto.pdb -nmol 171 -f step3_input.gro -o step3.1_input.gro 
+echo | gmx insert-molecules -ci colina.pdb -nmol 171 -f step3.1_input.gro -o step3.1_input.gro 
+echo | gmx insert-molecules -ci etilenoglicol.pdb -nmol 342 -f step3.1_input.gro -o step3.1_input.gro 
+echo | gmx insert-molecules -ci CO2.pdb -nmol 15 -f step3.1_input.gro -o step3.1_input.gro 
+
+# Minimization step
+echo | gmx grompp -f min1.mdp -c step3.1_input.gro -r step3.1_input.gro -p topol.top  -o min1_AgNP-CO2.tpr
+echo | gmx mdrun -ntmpi 1 -v -deffnm min1_AgNP-CO2
+echo | gmx grompp -f min2.mdp -c min1_AgNP-CO2.gro -r min1_AgNP-CO2.gro -p topol.top -o min2_AgNP-CO2.tpr
+echo | gmx mdrun -ntmpi 1 -v -deffnm min2_AgNP-CO2
+
+# Equilibration step
+echo | gmx grompp -f nvt.mdp -c min2_AgNP-CO2.gro -r min2_AgNP-CO2.gro -p topol.top -o nvt_AgNP-CO2.tpr
+echo | gmx mdrun -ntmpi 1 -v -deffnm nvt_AgNP-CO2
+echo | gmx grompp -f npt.mdp -c nvt_AgNP-CO2.gro -r nvt_AgNP-CO2.gro -p topol.top -maxwarn 1 -o npt_AgNP-CO2.tpr
+echo | gmx mdrun -ntmpi 1 -v -deffnm npt_AgNP-CO2
+
+# Production step
+echo | gmx grompp -f md.mdp -c npt_AgNP-CO2.gro -r npt_AgNP-CO2.gro -p topol.top -o md_AgNP-CO2_1.tpr
+echo | gmx mdrun -ntmpi 1 -v -deffnm md_AgNP-CO2_1
+echo | gmx grompp -f md.mdp -c npt_AgNP-CO2.gro -r npt_AgNP-CO2.gro -p topol.top -o md_AgNP-CO2_2.tpr
+echo | gmx mdrun -ntmpi 1 -v -deffnm md_AgNP-CO2_2
+echo | gmx grompp -f md.mdp -c npt_AgNP-CO2.gro -r npt_AgNP-CO2.gro -p topol.top -o md_AgNP-CO2_3.tpr
+echo | gmx mdrun -ntmpi 1 -v -deffnm md_AgNP-CO2_3
